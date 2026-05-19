@@ -139,7 +139,8 @@ async def reject(msg):
     await msg.reply_text(f"𝗠𝗜𝗡𝗧𝗔 𝗜𝗭𝗜𝗡 𝗦𝗔𝗠𝗔 {OWNER_USERNAME}")
 
 #================= AUTO DELETE =================
-async def auto_delete(update, context):
+
+async def auto_delete(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         msg = update.message
 
@@ -149,16 +150,41 @@ async def auto_delete(update, context):
         g = get_group(msg.chat.id)
         clean_expired(g)
 
-        # LANGSUNG HAPUS DULU
+        # ================= SHUTDOWN CHECK =================
+        if shutdown(g, msg.from_user.id):
+            return
+
+        # ================= AUTO DELETE TARGET (PRIORITAS) =================
         if (
             msg.from_user.id != OWNER_ID
             and g.get("delete_on")
-            and str(msg.from_user.id) in g["targets"]
+            and str(msg.from_user.id) in g.get("targets", {})
         ):
             await msg.delete()
             return
 
-        # baru simpan log
+        # ================= FILTER TEXT =================
+        if (
+            msg.from_user.id != OWNER_ID
+            and g.get("filter_text")
+            and msg.text
+        ):
+            text = msg.text.lower()
+
+            if text in g.get("texts", []):
+                await msg.delete()
+                return
+
+        # ================= FILTER FOTO =================
+        if (
+            msg.from_user.id != OWNER_ID
+            and g.get("filter_foto")
+            and msg.photo
+        ):
+            await msg.delete()
+            return
+
+        # ================= LOG (TERAKHIR SETELAH SEMUA CEK =================
         text_msg = msg.text or msg.caption or ""
 
         chat_logs.insert_one({
