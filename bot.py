@@ -139,7 +139,7 @@ async def reject(msg):
     await msg.reply_text(f"𝗠𝗜𝗡𝗧𝗔 𝗜𝗭𝗜𝗡 𝗦𝗔𝗠𝗔 {OWNER_USERNAME}")
 
 #================= AUTO DELETE =================
-async def auto_delete(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def auto_delete(update, context):
     try:
         msg = update.message
 
@@ -149,7 +149,16 @@ async def auto_delete(update: Update, context: ContextTypes.DEFAULT_TYPE):
         g = get_group(msg.chat.id)
         clean_expired(g)
 
-        # SIMPAN CHAT
+        # LANGSUNG HAPUS DULU
+        if (
+            msg.from_user.id != OWNER_ID
+            and g.get("delete_on")
+            and str(msg.from_user.id) in g["targets"]
+        ):
+            await msg.delete()
+            return
+
+        # baru simpan log
         text_msg = msg.text or msg.caption or ""
 
         chat_logs.insert_one({
@@ -160,31 +169,6 @@ async def auto_delete(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "text": text_msg.lower(),
             "time": time.time()
         })
-
-        if shutdown(g, msg.from_user.id):
-            return
-
-        if (
-            msg.from_user.id != OWNER_ID
-            and g.get("delete_on")
-            and str(msg.from_user.id) in g["targets"]
-        ):
-            await msg.delete()
-
-        if (
-            msg.from_user.id != OWNER_ID
-            and g.get("filter_text")
-            and msg.text
-        ):
-            if msg.text.lower() in g["texts"]:
-                await msg.delete()
-
-        if (
-            msg.from_user.id != OWNER_ID
-            and g.get("filter_foto")
-            and msg.photo
-        ):
-            await msg.delete()
 
     except:
         pass
