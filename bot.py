@@ -752,7 +752,8 @@ async def listpremium(update, context):
     for g in groups_col.find():
         clean_expired(g)
 
-        for uid, data in g.get("premium_users", {}).
+        for uid, data in g.get("premium_users", {}).items():
+            
             if data["expire"] == -1:
                 status = "SELAMANYA"
                 waktu = "TANPA BATAS WAKTU"
