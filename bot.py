@@ -258,10 +258,12 @@ async def sewabot(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def sewa_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
+    print("CALLBACK MASUK")
+
     query = update.callback_query
     await query.answer()
     
-    print("CALLBACK MASUK:", query.data)
+    print("DATA:", query.data)
 
     uid = query.from_user.id
 
@@ -1225,6 +1227,11 @@ app.add_handler(CommandHandler("kurangmasaaktif", kurangmasaaktif))
 app.add_handler(MessageHandler(~filters.COMMAND, auto_delete), group=1)
 
 print("BOT RUNNING...")
+
+async def error_handler(update, context):
+    print("ERROR NIH:", context.error)
+
+app.add_error_handler(error_handler)
 
 # 🔥 FIX 409 + RUN
 app.run_polling(drop_pending_updates=True)
