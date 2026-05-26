@@ -308,7 +308,7 @@ async def add(update, context):
 
     if int(uid) == OWNER_ID:
         return await msg.reply_text("OWNER KEBAL BOSS 😎")
-    name = context.args[0].lower()
+    name = " ".join(context.args).lower()
 
     g["targets"][uid] = name
     save_group(g)
@@ -660,9 +660,8 @@ async def tambahmasaaktif(update, context):
     if msg.chat.type != "private":
         return await msg.reply_text("COMMAND INI HANYA BISA DI PRIVATE BOT")
 
-    name = context.args[0].lower()
-    add_days = int(context.args[1])
-
+    add_days = int(context.args[0])
+name = " ".join(context.args[1:]).lower()
     now = time.time()
 
     for g in groups_col.find():
@@ -691,8 +690,8 @@ async def kurangmasaaktif(update, context):
     if msg.chat.type != "private":
         return await msg.reply_text("COMMAND INI HANYA BISA DI PRIVATE BOT")
 
-    name = context.args[0].lower()
-    reduce_days = int(context.args[1])
+    reduce_days = int(context.args[0])
+name = " ".join(context.args[1:]).lower()
 
     now = time.time()
 
