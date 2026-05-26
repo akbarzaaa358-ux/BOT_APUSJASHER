@@ -260,6 +260,7 @@ async def sewa_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     query = update.callback_query
     await query.answer()
+    print("CALLBACK MASUK:", query.data)
 
     uid = query.from_user.id
 
