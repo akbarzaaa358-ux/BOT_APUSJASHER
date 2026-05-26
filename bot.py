@@ -5,6 +5,7 @@ import asyncio
 import logging
 from datetime import datetime, timedelta, timezone
 
+from telegram import Update
 from telegram.ext import (
     ApplicationBuilder,
     CommandHandler,
