@@ -796,15 +796,18 @@ async def rekapkata(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await msg.reply_text(hasil)
 
-async def callback_sewa(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def callback_router(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
 
-    uid = query.from_user.id
     data = query.data
+    uid = query.from_user.id
 
+    print("DEBUG CALLBACK:", data)
+
+    # ================= PILIH PAKET =================
     if data in ["sewa_mingguan", "sewa_bulanan"]:
-        paket = "mingguan" if "mingguan" in data else "bulanan"
+        paket = "mingguan" if data == "sewa_mingguan" else "bulanan"
         p = SEWA_PAKET[paket]
 
         pending_sewa[uid] = {
@@ -831,14 +834,8 @@ async def callback_sewa(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
 
-async def callback_confirm(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-
-    uid = query.from_user.id
-    data = query.data
-
-    if data == "sewa_paid":
+    # ================= SUDAH BAYAR =================
+    elif data == "sewa_paid":
 
         if uid not in pending_sewa:
             return await query.edit_message_text("❌ DATA TIDAK DITEMUKAN")
@@ -852,8 +849,7 @@ async def callback_confirm(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ]
 
         await query.edit_message_text(
-            "⏳ MENUNGGU APPROVAL OWNER...",
-            reply_markup=InlineKeyboardMarkup(keyboard)
+            "⏳ MENUNGGU APPROVAL OWNER..."
         )
 
         await context.bot.send_message(
@@ -866,56 +862,51 @@ async def callback_confirm(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
 
+    # ================= CANCEL =================
     elif data == "sewa_cancel":
         pending_sewa.pop(uid, None)
         await query.edit_message_text("❌ TRANSAKSI DIBATALKAN")
-# ================= APPROVAL OWNER =================
-async def callback_owner(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
 
-    data = query.data
+    # ================= OWNER APPROVE =================
+    elif data.startswith("approve_"):
 
-    if query.from_user.id != OWNER_ID:
-        return
+        if uid != OWNER_ID:
+            return
 
-    if data.startswith("approve_"):
-        uid = int(data.split("_")[1])
+        target_uid = data.split("_")[1]
 
-        if uid not in pending_sewa:
+        if int(target_uid) not in pending_sewa:
             return await query.edit_message_text("DATA TIDAK DITEMUKAN")
 
-        trx = pending_sewa[uid]
+        trx = pending_sewa[int(target_uid)]
 
         g = get_group(trx["chat_id"])
-
-        g["premium_users"][str(uid)] = {
+        g["premium_users"][str(target_uid)] = {
             "name": "SEWA USER",
             "expire": time.time() + (trx["days"] * 86400)
         }
 
         save_group(g)
-
-        del pending_sewa[uid]
+        pending_sewa.pop(int(target_uid), None)
 
         await query.edit_message_text("✅ APPROVE BERHASIL")
 
+    # ================= REJECT =================
     elif data.startswith("reject_"):
-        uid = int(data.split("_")[1])
 
-        if uid in pending_sewa:
-            del pending_sewa[uid]
+        if uid != OWNER_ID:
+            return
+
+        target_uid = int(data.split("_")[1])
+        pending_sewa.pop(target_uid, None)
 
         await query.edit_message_text("❌ DITOLAK OWNER")
-
 
 #================= MAIN =================
 
 app = ApplicationBuilder().token(TOKEN).build()
 
-app.add_handler(CallbackQueryHandler(callback_sewa, pattern="^sewa_(mingguan|bulanan)$"))
-app.add_handler(CallbackQueryHandler(callback_confirm, pattern="^sewa_(paid|cancel)$"))
-app.add_handler(CallbackQueryHandler(callback_owner, pattern="^(approve_|reject_)"))
+app.add_handler(CallbackQueryHandler(callback_router))
 # COMMAND
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("sewabot", sewabot))
