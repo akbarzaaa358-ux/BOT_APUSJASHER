@@ -1148,7 +1148,6 @@ async def rekapkata(update: Update, context: ContextTypes.DEFAULT_TYPE):
 #================= MAIN =================
 
 app = ApplicationBuilder().token(TOKEN).build()
-# =========================================
 # HANDLER SEWA
 # =========================================
 
