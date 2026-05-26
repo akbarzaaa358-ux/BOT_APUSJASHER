@@ -800,14 +800,13 @@ async def callback_router(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
 
-    data = query.data
     uid = query.from_user.id
+    data = query.data
 
-    print("DEBUG CALLBACK:", data)
-
-    # ================= PILIH PAKET =================
+    # ================= SEWA MENU =================
     if data in ["sewa_mingguan", "sewa_bulanan"]:
         paket = "mingguan" if data == "sewa_mingguan" else "bulanan"
+
         p = SEWA_PAKET[paket]
 
         pending_sewa[uid] = {
@@ -833,75 +832,61 @@ async def callback_router(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"⚠️ Klik setelah transfer",
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
+        return
 
-    # ================= SUDAH BAYAR =================
-    elif data == "sewa_paid":
-
+    # ================= CONFIRM =================
+    if data == "sewa_paid":
         if uid not in pending_sewa:
-            return await query.edit_message_text("❌ DATA TIDAK DITEMUKAN")
+            await query.edit_message_text("❌ DATA TIDAK DITEMUKAN")
+            return
 
         trx = pending_sewa[uid]
         trx["status"] = "waiting_approval"
 
         keyboard = [
-            [InlineKeyboardButton("✅ APPROVE", callback_data=f"approve_{uid}")],
-            [InlineKeyboardButton("❌ REJECT", callback_data=f"reject_{uid}")]
+            [InlineKeyboardButton("APPROVE", callback_data=f"approve_{uid}")],
+            [InlineKeyboardButton("REJECT", callback_data=f"reject_{uid}")]
         ]
 
-        await query.edit_message_text(
-            "⏳ MENUNGGU APPROVAL OWNER..."
-        )
+        await query.edit_message_text("⏳ MENUNGGU APPROVAL OWNER", reply_markup=InlineKeyboardMarkup(keyboard))
 
         await context.bot.send_message(
             OWNER_ID,
-            f"💰 SEWA BARU\n\n"
-            f"User: {uid}\n"
-            f"Paket: {trx['paket']}\n"
-            f"Harga: Rp{trx['price']}\n"
-            f"Chat: {trx['chat_id']}",
+            f"💰 SEWA BARU\nUser: {uid}\nPaket: {trx['paket']}\nHarga: Rp{trx['price']}\nChat: {trx['chat_id']}",
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
+        return
 
-    # ================= CANCEL =================
-    elif data == "sewa_cancel":
+    if data == "sewa_cancel":
         pending_sewa.pop(uid, None)
         await query.edit_message_text("❌ TRANSAKSI DIBATALKAN")
+        return
 
-    # ================= OWNER APPROVE =================
-    elif data.startswith("approve_"):
+    # ================= OWNER APPROVAL =================
+    if query.from_user.id == OWNER_ID:
+        if data.startswith("approve_"):
+            uid2 = int(data.split("_")[1])
 
-        if uid != OWNER_ID:
+            trx = pending_sewa.get(uid2)
+            if not trx:
+                return await query.edit_message_text("DATA TIDAK DITEMUKAN")
+
+            g = get_group(trx["chat_id"])
+            g["premium_users"][str(uid2)] = {
+                "name": "SEWA USER",
+                "expire": time.time() + (trx["days"] * 86400)
+            }
+            save_group(g)
+
+            pending_sewa.pop(uid2, None)
+            await query.edit_message_text("APPROVE BERHASIL")
             return
 
-        target_uid = data.split("_")[1]
-
-        if int(target_uid) not in pending_sewa:
-            return await query.edit_message_text("DATA TIDAK DITEMUKAN")
-
-        trx = pending_sewa[int(target_uid)]
-
-        g = get_group(trx["chat_id"])
-        g["premium_users"][str(target_uid)] = {
-            "name": "SEWA USER",
-            "expire": time.time() + (trx["days"] * 86400)
-        }
-
-        save_group(g)
-        pending_sewa.pop(int(target_uid), None)
-
-        await query.edit_message_text("✅ APPROVE BERHASIL")
-
-    # ================= REJECT =================
-    elif data.startswith("reject_"):
-
-        if uid != OWNER_ID:
+        if data.startswith("reject_"):
+            uid2 = int(data.split("_")[1])
+            pending_sewa.pop(uid2, None)
+            await query.edit_message_text("DITOLAK")
             return
-
-        target_uid = int(data.split("_")[1])
-        pending_sewa.pop(target_uid, None)
-
-        await query.edit_message_text("❌ DITOLAK OWNER")
-
 #================= MAIN =================
 
 app = ApplicationBuilder().token(TOKEN).build()
@@ -947,9 +932,8 @@ app.add_handler(MessageHandler(~filters.COMMAND, auto_delete), group=1)
 print("BOT RUNNING...")
 
 async def error_handler(update, context):
-    print("ERROR NIH:", context.error)
-
-app.add_error_handler(error_handler)
-
+    import traceback
+    print("ERROR NIH:")
+    traceback.print_exception(type(context.error), context.error, context.error.__traceback__)
 # 🔥 FIX 409 + RUN
 app.run_polling(drop_pending_updates=True)
