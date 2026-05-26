@@ -1148,10 +1148,44 @@ async def rekapkata(update: Update, context: ContextTypes.DEFAULT_TYPE):
 #================= MAIN =================
 
 app = ApplicationBuilder().token(TOKEN).build()
+# =========================================
+# HANDLER SEWA
+# =========================================
 
-# 🔥 CALLBACK PALING ATAS
-app.add_handler(CallbackQueryHandler(confirm_sewa_handler, pattern="^confirm_sewa$"), group=0)
-app.add_handler(CallbackQueryHandler(approve_sewa_handler, pattern="^approve_"), group=0)
+app.add_handler(
+    CallbackQueryHandler(
+        sewa_callback,
+        pattern="^(paket_mingguan|paket_bulanan|plus|minus|quick_|buy|none)$"
+    ),
+    group=0
+)
+
+app.add_handler(
+    CallbackQueryHandler(
+        sudah_transfer,
+        pattern="^sudah_tf$"
+    ),
+    group=0
+)
+
+app.add_handler(
+    CallbackQueryHandler(
+        done_group,
+        pattern="^done_group$"
+    ),
+    group=0
+)
+
+app.add_handler(
+    CallbackQueryHandler(
+        approve_sewa,
+        pattern="^approve_sewa_"
+    ),
+    group=0
+)
+
+# COMMAND SEWA
+app.add_handler(CommandHandler("sewabot", sewabot))
 
 # COMMAND
 app.add_handler(CommandHandler("start", start))
