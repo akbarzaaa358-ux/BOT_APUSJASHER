@@ -680,7 +680,7 @@ async def tambahmasaaktif(update, context):
 
     add_days = int(context.args[0])
     name = " ".join(context.args[1:]).lower()
-    now = time.time()
+        now = time.time()
 
     for g in groups_col.find():
         for uid, data in g.get("premium_users", {}).items():
@@ -709,9 +709,9 @@ async def kurangmasaaktif(update, context):
         return await msg.reply_text("COMMAND INI HANYA BISA DI PRIVATE BOT")
 
     reduce_days = int(context.args[0])
-name = " ".join(context.args[1:]).lower()
+    name = " ".join(context.args[1:]).lower()
 
-    now = time.time()
+        now = time.time()
 
     for g in groups_col.find():
         for uid, data in g.get("premium_users", {}).items():
