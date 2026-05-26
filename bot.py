@@ -213,134 +213,378 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await msg.reply_text(text)
 
-
-#================= SEWABOT =================
+# =========================================
+# /SEWABOT
+# =========================================
 
 async def sewabot(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
     msg = update.message
 
-    # PRIVATE MODE
-    if msg.chat.type == "private":
-        text = (
-            "𝗟𝗜𝗦𝗧 𝗛𝗔𝗥𝗚𝗔 𝗕𝗢𝗧 𝗞𝗜𝗡𝗚𝗭𝗔𝗔:\n"
-            "𝗣𝗘𝗥 𝗠𝗜𝗡𝗚𝗚𝗨 𝟱𝗞\n"
-            "𝗣𝗘𝗥 𝗕𝗨𝗟𝗔𝗡 𝟭𝟱𝗞\n\n"
-
-            "𝗣𝗔𝗬𝗠𝗘𝗡𝗧 𝗞𝗜𝗡𝗚𝗭𝗔𝗔:\n"
-            "DANA: 08888604716\n"
-            "GOPAY: KOSONG\n"
-            "OVO : KOSONG\n"
-            f"QRIS: PM {OWNER_USERNAME}\n\n"
-
-            f"•𝗨𝗗𝗔𝗛 𝗧𝗙? 𝗞𝗜𝗥𝗜𝗠 𝗕𝗨𝗞𝗧𝗜 𝗞𝗘 {OWNER_USERNAME}\n"
-            "•𝗞𝗔𝗟𝗔𝗨 𝗕𝗘𝗟𝗨𝗠 𝗗𝗜 𝗥𝗘𝗦𝗣𝗢𝗡 𝗧𝗨𝗡𝗚𝗚𝗨 𝗦𝗘𝗕𝗘𝗡𝗧𝗔𝗥\n"
-            "•𝗝𝗔𝗡𝗚𝗔𝗡 𝗟𝗨𝗣𝗔 𝗧𝗔𝗠𝗕𝗔𝗛𝗜𝗡 𝗕𝗢𝗧𝗡𝗬𝗔 𝗞𝗘 𝗚𝗥𝗨𝗣 𝗬𝗔𝗪 "
-            "𝗞𝗔𝗦𝗜𝗛 𝗔𝗞𝗦𝗘𝗦 𝗔𝗣𝗨𝗡 𝗣𝗘𝗦𝗔𝗡/𝗔𝗞𝗦𝗘𝗦 𝗔𝗟𝗟🥰"
-        )
-
-        return await msg.reply_text(text, parse_mode="Markdown")
-
-    # GROUP MODE
     keyboard = [
-        [InlineKeyboardButton("✅ KONFIRMASI PEMBAYARAN", callback_data="confirm_sewa")]
+        [
+            InlineKeyboardButton(
+                "📆 PAKET MINGGUAN",
+                callback_data="paket_mingguan"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                "📅 PAKET BULANAN",
+                callback_data="paket_bulanan"
+            )
+        ]
     ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
 
     text = (
-        "𝗟𝗜𝗦𝗧 𝗛𝗔𝗥𝗚𝗔 𝗕𝗢𝗧 𝗞𝗜𝗡𝗚𝗭𝗔𝗔:\n"
-        "𝗣𝗘𝗥 𝗠𝗜𝗡𝗚𝗚𝗨 𝟱𝗞\n"
-        "𝗣𝗘𝗥 𝗕𝗨𝗟𝗔𝗡 𝟭𝟱𝗞\n\n"
+        "PILIH JUMLAH SEWA YG INGIN DI SEWA:\n\n"
 
-        "𝗣𝗔𝗬𝗠𝗘𝗡𝗧 𝗞𝗜𝗡𝗚𝗭𝗔𝗔:\n"
-        "DANA: 08888604716\n"
-        "GOPAY: KOSONG\n"
-        "OVO : KOSONG\n"
-        f"QRIS: PM {OWNER_USERNAME}\n\n"
+        "📆 PAKET MINGGUAN\n"
+        "• PERMINGGU 5K\n\n"
 
-        "Setelah transfer,\n"
-        "tekan tombol KONFIRMASI PEMBAYARAN di bawah 👇"
+        "📅 PAKET BULANAN\n"
+        "• PERBULAN 15K"
     )
 
-    await msg.reply_text(text, reply_markup=reply_markup)
+    await msg.reply_text(
+        text,
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
 
-async def confirm_sewa_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        print("KEPENCET CONFIRM")  # debug
 
-        query = update.callback_query
-        if not query:
+# =========================================
+# CALLBACK SEWA
+# =========================================
+
+async def sewa_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    query = update.callback_query
+    await query.answer()
+
+    uid = query.from_user.id
+
+    # ================= PAKET =================
+
+    if query.data == "paket_mingguan":
+
+        pending_sewa[uid] = {
+            "paket": "MINGGUAN",
+            "qty": 1,
+            "harga_per": 5000,
+            "days_per": 7,
+            "name": query.from_user.first_name.lower()
+        }
+
+    elif query.data == "paket_bulanan":
+
+        pending_sewa[uid] = {
+            "paket": "BULANAN",
+            "qty": 1,
+            "harga_per": 15000,
+            "days_per": 30,
+            "name": query.from_user.first_name.lower()
+        }
+
+    # ================= QUICK =================
+
+    elif query.data.startswith("quick_"):
+
+        qty = int(query.data.split("_")[1])
+
+        if uid in pending_sewa:
+            pending_sewa[uid]["qty"] = qty
+
+    # ================= PLUS =================
+
+    elif query.data == "plus":
+
+        if uid in pending_sewa:
+            pending_sewa[uid]["qty"] += 1
+
+    # ================= MINUS =================
+
+    elif query.data == "minus":
+
+        if uid in pending_sewa:
+
+            if pending_sewa[uid]["qty"] > 1:
+                pending_sewa[uid]["qty"] -= 1
+
+    # ================= NONE =================
+
+    elif query.data == "none":
+        return await query.answer()
+
+    # ================= BUY =================
+
+    elif query.data == "buy":
+
+        if uid not in pending_sewa:
             return
 
-        await query.answer()
-        await context.bot.send_message(
-    chat_id=OWNER_ID,
-    text="DEBUG: TOMBOL CONFIRM KEPENCET"
-        )
+        data = pending_sewa[uid]
 
-        user = query.from_user
+        total = data["qty"] * data["harga_per"]
 
-        # anti spam klik
-        if user.id in pending_confirm:
-            return await query.answer("SUDAH DIKIRIM, TUNGGU", show_alert=True)
-
-        # simpan ke pending
-        pending_confirm[user.id] = True
-
-        # ubah pesan jadi tunggu
-        await query.edit_message_text("⏳ KONFIRMASI DIKIRIM, TUNGGU SEBENTAR...")
-
-        # kirim ke owner
         keyboard = [
-            [InlineKeyboardButton("✅ TERIMA", callback_data=f"approve_{user.id}")]
+            [
+                InlineKeyboardButton(
+                    "✅ SUDAH TRANSFER",
+                    callback_data="sudah_tf"
+                )
+            ]
         ]
 
-        await context.bot.send_message(
-            chat_id=OWNER_ID,
-            text=(
-                "📥 REQUEST SEWA MASUK\n\n"
-                f"Nama: {user.first_name}\n"
-                f"ID: {user.id}"
-            ),
+        text = (
+            "📄 PEMBAYARAN SEWA\n\n"
+
+            f"📦 PAKET: {data['paket']}\n"
+            f"📊 TOTAL SEWA: {data['qty']}x\n"
+            f"💰 TOTAL BAYAR: Rp{total:,}\n\n"
+
+            "💳 PAYMENT OWNER\n"
+            "DANA: 08888604716\n"
+            "OVO: KOSONG\n"
+            "GOPAY: KOSONG\n\n"
+
+            "SETELAH TRANSFER\n"
+            "KLIK TOMBOL DIBAWAH"
+        )
+
+        return await query.edit_message_text(
+            text,
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
 
-    except Exception as e:
-        print("ERROR CONFIRM:", e)
+    # ================= TAMPILAN =================
 
-async def approve_sewa_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        print("KEPENCET APPROVE")  # debug
+    if uid not in pending_sewa:
+        return
 
-        query = update.callback_query
-        if not query:
-            return
+    data = pending_sewa[uid]
 
-        await query.answer()
+    qty = data["qty"]
 
-        # hanya owner
-        if query.from_user.id != OWNER_ID:
-            return await query.answer("Bukan owner", show_alert=True)
+    total = qty * data["harga_per"]
 
-        uid = int(query.data.split("_")[1])
+    keyboard = [
+        [
+            InlineKeyboardButton("➖", callback_data="minus"),
+            InlineKeyboardButton(str(qty), callback_data="none"),
+            InlineKeyboardButton("➕", callback_data="plus")
+        ],
+        [
+            InlineKeyboardButton("x4", callback_data="quick_4"),
+            InlineKeyboardButton("x8", callback_data="quick_8"),
+            InlineKeyboardButton("x12", callback_data="quick_12")
+        ],
+        [
+            InlineKeyboardButton(
+                "🛒 BELI",
+                callback_data="buy"
+            )
+        ]
+    ]
 
-        if uid not in pending_confirm:
-            return await query.answer("DATA TIDAK ADA", show_alert=True)
+    text = (
+        "PILIH TOTAL SEWA:\n\n"
 
-        # hapus dari pending
-        del pending_confirm[uid]
+        f"📦 PAKET: {data['paket']}\n"
+        f"📊 TOTAL: {qty}x\n"
+        f"💰 HARGA: Rp{total:,}"
+    )
 
-        # edit pesan owner
-        await query.edit_message_text("✅ PEMBAYARAN DITERIMA")
+    await query.edit_message_text(
+        text,
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
 
-        # kirim ke user
-        await context.bot.send_message(
-            chat_id=uid,
-            text="✅ PEMBAYARAN BERHASIL DITERIMA\n\nBOT SUDAH AKTIF 🔥"
+
+# =========================================
+# SUDAH TRANSFER
+# =========================================
+
+async def sudah_transfer(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    query = update.callback_query
+    await query.answer()
+
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                "➕ TAMBAHKAN BOT KE GRUP",
+                url=f"https://t.me/{BOT_USERNAME}?startgroup=true"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                "✅ SUDAH DITAMBAHKAN",
+                callback_data="done_group"
+            )
+        ]
+    ]
+
+    text = (
+        "⚠️ JANGAN LUPA:\n\n"
+
+        "• TAMBAHKAN BOT KE GRUP\n"
+        "• JADIKAN ADMIN\n"
+        "• KASIH AKSES HAPUS PESAN / ALL PERMISSION\n\n"
+
+        "SETELAH SELESAI\n"
+        "KLIK SUDAH DITAMBAHKAN"
+    )
+
+    await query.edit_message_text(
+        text,
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
+
+
+# =========================================
+# DONE GROUP
+# =========================================
+
+async def done_group(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    query = update.callback_query
+    await query.answer()
+
+    uid = query.from_user.id
+
+    if uid not in pending_sewa:
+        return
+
+    data = pending_sewa[uid]
+
+    total_days = data["qty"] * data["days_per"]
+
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                "✅ KONFIRMASI",
+                callback_data=f"approve_sewa_{uid}"
+            )
+        ]
+    ]
+
+    text_owner = (
+        "📥 REQUEST SEWA MASUK\n\n"
+
+        f"👤 USER: {query.from_user.first_name}\n"
+        f"🆔 USERID: {uid}\n\n"
+
+        f"📦 PAKET: {data['paket']}\n"
+        f"📅 DURASI: {total_days} HARI"
+    )
+
+    await context.bot.send_message(
+        OWNER_ID,
+        text_owner,
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
+
+    owner_button = [
+        [
+            InlineKeyboardButton(
+                "👤 CHAT OWNER",
+                url=f"https://t.me/{OWNER_USERNAME.replace('@','')}"
+            )
+        ]
+    ]
+
+    await query.edit_message_text(
+        "⏳ TUNGGU OWNER KONFIRMASI",
+        reply_markup=InlineKeyboardMarkup(owner_button)
+    )
+
+
+# =========================================
+# APPROVE OWNER
+# =========================================
+
+async def approve_sewa(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    query = update.callback_query
+    await query.answer()
+
+    if query.from_user.id != OWNER_ID:
+        return
+
+    uid = int(query.data.split("_")[2])
+
+    if uid not in pending_sewa:
+        return await query.edit_message_text(
+            "❌ DATA SEWA TIDAK DITEMUKAN"
         )
 
-    except Exception as e:
-        print("ERROR APPROVE:", e)
+    data = pending_sewa[uid]
 
+    target_group = None
+
+    for g in groups_col.find():
+
+        try:
+            member = await context.bot.get_chat_member(
+                int(g["chat_id"]),
+                uid
+            )
+
+            if member:
+                target_group = g
+                break
+
+        except:
+            continue
+
+    if not target_group:
+        return await query.edit_message_text(
+            "❌ USER BELUM ADA DI GROUP"
+        )
+
+    # ================= PASTIKAN FIELD ADA =================
+
+    if "allowed_users" not in target_group:
+        target_group["allowed_users"] = {}
+
+    if "premium_users" not in target_group:
+        target_group["premium_users"] = {}
+
+    # ================= DATA =================
+
+    total_days = data["qty"] * data["days_per"]
+
+    user_name = data["name"]
+
+    # ================= MASUKKAN USER =================
+
+    target_group["allowed_users"][str(uid)] = user_name
+
+    target_group["premium_users"][str(uid)] = {
+        "name": user_name,
+        "expire": time.time() + (total_days * 86400)
+    }
+
+    save_group(target_group)
+
+    # ================= KIRIM KE USER =================
+
+    await context.bot.send_message(
+        uid,
+        (
+            "✅ SEWA BERHASIL\n\n"
+            f"🆔 USERID: {uid}\n"
+            f"🛡️ GROUP: {target_group['chat_id']}\n"
+            f"📅 MASA AKTIF: {total_days} HARI\n\n"
+            "BERHASIL MASUK LISTUSER & LISTPREMIUM 🔥"
+        )
+    )
+
+    await query.edit_message_text(
+        "✅ USER BERHASIL DITAMBAHKAN"
+    )
+
+    del pending_sewa[uid]
 
 #================= INFOBOT =================
 
