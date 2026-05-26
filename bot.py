@@ -5,8 +5,6 @@ import asyncio
 import logging
 from datetime import datetime, timedelta, timezone
 
-from telegram.ext import CallbackQueryHandler
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     ApplicationBuilder,
     CommandHandler,
@@ -209,6 +207,26 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "> •𝐊𝐀𝐋𝐀𝐔 𝐌𝐀𝐔 𝐋𝐈𝐀𝐓 𝐈𝐍𝐅𝐎 𝐁𝐎𝐓/𝐅𝐔𝐍𝐆𝐒𝐈 𝐁𝐎𝐓 𝐊𝐄𝐓𝐈𝐊 /infobot\n"
         "> •𝐊𝐀𝐋𝐀𝐔 𝐌𝐀𝐔 𝐋𝐈𝐀𝐓 𝐂𝐎𝐌𝐌𝐀𝐍𝐃 𝐁𝐎𝐓 𝐊𝐄𝐓𝐈𝐊 /help\n"
         "> 𝐁𝐔𝐊𝐀𝐍 𝐁𝐎𝐓 𝐓𝐄𝐑𝐁𝐀𝐈𝐊 𝐓𝐀𝐏𝐈 𝐁𝐄𝐑𝐔𝐒𝐀𝐇𝐀 𝐌𝐄𝐍𝐉𝐀𝐃𝐈 𝐒𝐀𝐋𝐀𝐇 𝐒𝐀𝐓𝐔 𝐁𝐎𝐓 𝐓𝐄𝐑𝐁𝐀𝐈𝐊😁☺️"
+    )
+
+    await msg.reply_text(text)
+
+async def sewabot(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    msg = update.message
+
+    # ================= DI GRUP =================
+    if msg.chat.type != "private":
+        return await msg.reply_text(
+            "💎 SILAHKAN CHAT @KESUKBOT"
+        )
+
+    # ================= DI PRIVATE =================
+    text = (
+        "💎 SILAHKAN MASUKKAN BOT INI KE GRUP ANDA\n\n"
+        "⚙️ KASIH AKSES:\n"
+        "• AKSES HAPUS PESAN\n"
+        "• AKSES ADMIN (ALL)\n\n"
+        "📌 SETELAH ITU CHAT @KESUKBOT"
     )
 
     await msg.reply_text(text)
