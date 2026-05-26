@@ -262,12 +262,12 @@ async def sewabot(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def sewa_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
-    print("CALLBACK MASUK")
+    logging.info("CALLBACK MASUK")
 
     query = update.callback_query
     await query.answer()
     
-    print("DATA:", query.data)
+    logging.info("DATA:", query.data)
 
     uid = query.from_user.id
 
@@ -1158,17 +1158,48 @@ async def test_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
 
-    print("KEPENCET")
+    logging.info("KEPENCET")
     
     await query.message.reply_text("CALLBACK JALAN")
 
 #================= MAIN =================
 
 app = ApplicationBuilder().token(TOKEN).build()
-app.add_handler(
-    CallbackQueryHandler(test_callback),
-    group=0
-)
+async def callback_router(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    data = query.data
+
+    logging.info(f"CALLBACK: {data}")
+
+    await query.answer()
+
+    # ===== SEWA FLOW =====
+    if data in [
+        "paket_mingguan",
+        "paket_bulanan",
+        "plus",
+        "minus",
+        "buy",
+        "none"
+    ] or data.startswith("quick_"):
+        return await sewa_callback(update, context)
+
+    # ===== PAYMENT STEP =====
+    if data == "sudah_tf":
+        return await sudah_transfer(update, context)
+
+    # ===== GROUP CONFIRM =====
+    if data == "done_group":
+        return await done_group(update, context)
+
+    # ===== OWNER APPROVE =====
+    if data.startswith("approve_sewa_"):
+        return await approve_sewa(update, context)
+
+    # fallback
+    return
+
+app.add_handler(CallbackQueryHandler(callback_router))
 
 # COMMAND SEWA
 app.add_handler(CommandHandler("sewabot", sewabot))
