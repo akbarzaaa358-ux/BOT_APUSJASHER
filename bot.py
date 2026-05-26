@@ -267,7 +267,7 @@ async def sewa_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     
-    logging.info("DATA:", query.data)
+    logging.info(f"DATA: {query.data}")
 
     uid = query.from_user.id
 
