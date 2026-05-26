@@ -1149,9 +1149,22 @@ async def rekapkata(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await msg.reply_text(hasil)
 
+async def test_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    query = update.callback_query
+    await query.answer()
+
+    print("KEPENCET")
+    
+    await query.message.reply_text("CALLBACK JALAN")
+
 #================= MAIN =================
 
 app = ApplicationBuilder().token(TOKEN).build()
+app.add_handler(
+    CallbackQueryHandler(test_callback),
+    group=0
+)
 # HANDLER SEWA
 # =========================================
 
