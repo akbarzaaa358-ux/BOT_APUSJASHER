@@ -1165,40 +1165,6 @@ app.add_handler(
     CallbackQueryHandler(test_callback),
     group=0
 )
-# HANDLER SEWA
-# =========================================
-
-app.add_handler(
-    CallbackQueryHandler(
-        sewa_callback,
-        pattern="^(paket_mingguan|paket_bulanan|plus|minus|quick_4|quick_8|quick_12|buy|none)$"
-    ),
-    group=0
-)
-
-app.add_handler(
-    CallbackQueryHandler(
-        sudah_transfer,
-        pattern="^sudah_tf$"
-    ),
-    group=0
-)
-
-app.add_handler(
-    CallbackQueryHandler(
-        done_group,
-        pattern="^done_group$"
-    ),
-    group=0
-)
-
-app.add_handler(
-    CallbackQueryHandler(
-        approve_sewa,
-        pattern="^approve_sewa_"
-    ),
-    group=0
-)
 
 # COMMAND SEWA
 app.add_handler(CommandHandler("sewabot", sewabot))
