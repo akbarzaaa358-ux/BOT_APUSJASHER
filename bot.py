@@ -835,13 +835,14 @@ async def callback_sewa(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # AUTO CANCEL 5 MENIT
         asyncio.create_task(auto_cancel(uid, query))
 
-    async def callback_confirm(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        query = update.callback_query
-        await query.answer()
+async def callback_confirm(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
 
     uid = query.from_user.id
     data = query.data
 
+    # USER SUDAH BAYAR
     if data == "sewa_paid":
 
         if uid not in pending_sewa:
@@ -873,8 +874,8 @@ async def callback_sewa(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif data == "sewa_cancel":
         if uid in pending_sewa:
             del pending_sewa[uid]
-        await query.edit_message_text("❌ TRANSAKSI DIBATALKAN")
 
+        await query.edit_message_text("❌ TRANSAKSI DIBATALKAN")
 # ================= APPROVAL OWNER =================
 async def callback_owner(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -919,14 +920,12 @@ async def callback_owner(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 app = ApplicationBuilder().token(TOKEN).build()
 
-app.add_handler(CommandHandler("sewabot", sewabot))
-
-app.add_handler(CallbackQueryHandler(callback_sewa))
-app.add_handler(CallbackQueryHandler(callback_confirm))
-app.add_handler(CallbackQueryHandler(callback_owner))
-
+app.add_handler(CallbackQueryHandler(callback_sewa, pattern="^sewa_"))
+app.add_handler(CallbackQueryHandler(callback_confirm, pattern="^sewa_"))
+app.add_handler(CallbackQueryHandler(callback_owner, pattern="^(approve_|reject_)"))
 # COMMAND
 app.add_handler(CommandHandler("start", start))
+app.add_handler(CommandHandler("sewabot", sewabot))
 app.add_handler(CommandHandler("help", help_cmd))
 app.add_handler(CommandHandler("infobot", infobot))
 app.add_handler(CommandHandler("rekapkata", rekapkata))
