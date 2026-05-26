@@ -1190,7 +1190,7 @@ app.add_handler(CommandHandler("sewabot", sewabot))
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("help", help_cmd))
 app.add_handler(CommandHandler("infobot", infobot))
-app.add_handler(CommandHandler("sewabot", sewabot))
+app.add_handler(CommandHandler("sewa", sewa))
 app.add_handler(CommandHandler("rekapkata", rekapkata))
 
 # target
