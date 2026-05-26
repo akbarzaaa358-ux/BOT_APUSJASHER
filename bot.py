@@ -260,6 +260,7 @@ async def sewa_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     query = update.callback_query
     await query.answer()
+    
     print("CALLBACK MASUK:", query.data)
 
     uid = query.from_user.id
@@ -1155,7 +1156,7 @@ app = ApplicationBuilder().token(TOKEN).build()
 app.add_handler(
     CallbackQueryHandler(
         sewa_callback,
-        pattern="^(paket_mingguan|paket_bulanan|plus|minus|quick_|buy|none)$"
+        pattern="^(paket_mingguan|paket_bulanan|plus|minus|quick_4|quick_8|quick_12|buy|none)$"
     ),
     group=0
 )
@@ -1191,7 +1192,6 @@ app.add_handler(CommandHandler("sewabot", sewabot))
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("help", help_cmd))
 app.add_handler(CommandHandler("infobot", infobot))
-app.add_handler(CommandHandler("sewabot", sewabot))
 app.add_handler(CommandHandler("rekapkata", rekapkata))
 
 # target
