@@ -836,13 +836,12 @@ async def callback_sewa(update: Update, context: ContextTypes.DEFAULT_TYPE):
         asyncio.create_task(auto_cancel(uid, query))
 
     async def callback_confirm(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
+        query = update.callback_query
+        await query.answer()
 
     uid = query.from_user.id
     data = query.data
 
-    # USER SUDAH BAYAR
     if data == "sewa_paid":
 
         if uid not in pending_sewa:
@@ -861,7 +860,6 @@ async def callback_sewa(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
 
-        # kirim ke owner
         await context.bot.send_message(
             OWNER_ID,
             f"💰 SEWA BARU\n\n"
