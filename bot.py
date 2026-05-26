@@ -799,69 +799,33 @@ async def rekapkata(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await msg.reply_text(hasil)
 
 async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
+    try:
+        query = update.callback_query
+        await query.answer()
 
-    data = query.data
-    uid = str(query.from_user.id)
+        data = query.data
+        uid = str(query.from_user.id)
 
-    # ================= PILIH PAKET =================
-    if data in ["sewa_mingguan", "sewa_bulanan"]:
-        pending_confirm[uid] = {
-            "paket": data
-        }
+        print("DEBUG CALLBACK:", data)  # 🔥 cek jalan atau tidak
 
-        keyboard = [
-            [InlineKeyboardButton("✅ SUDAH BAYAR", callback_data="sudah_bayar")]
-        ]
+        if data in ["sewa_mingguan", "sewa_bulanan"]:
+            pending_confirm[uid] = {"paket": data}
 
-        await query.message.reply_text(
-            "💳 PAYMENT:\n\n"
-            "DANA: 085609264485\n"
-            "GOPAY: -\n"
-            "SEABANK: -\n\n"
-            "TEKAN TOMBOL JIKA SUDAH TRANSFER",
-            reply_markup=InlineKeyboardMarkup(keyboard)
-        )
+            keyboard = [[InlineKeyboardButton("SUDAH BAYAR", callback_data="sudah_bayar")]]
 
-    # ================= SUDAH BAYAR =================
-    elif data == "sudah_bayar":
-        if uid not in pending_confirm:
-            return await query.message.reply_text("❌ BELUM PILIH PAKET")
-
-        pending_confirm[uid]["step"] = "wait_group"
-
-        await query.message.reply_text("📩 KIRIM ID GRUP ANDA SEKARANG")
-
-    # ================= APPROVE OWNER =================
-    elif data.startswith("approve_") or data.startswith("reject_"):
-        if query.from_user.id != OWNER_ID:
-            return await query.message.reply_text("NO ACCESS")
-
-        _, user_id, gid, paket = data.split("_")
-
-        g = get_group(gid)
-
-        if data.startswith("approve_"):
-
-            expire = time.time() + (
-                7 * 86400 if paket == "sewa_mingguan" else 30 * 86400
+            await query.message.reply_text(
+                "💳 PAYMENT KIRIM:",
+                reply_markup=InlineKeyboardMarkup(keyboard)
             )
 
-            # MASUK KE SYSTEM KINGZAA
-            g["premium_users"][user_id] = {
-                "name": paket,
-                "expire": expire
-            }
+        elif data == "sudah_bayar":
+            await query.message.reply_text("📩 KIRIM ID GRUP")
 
-            g["allowed_users"][user_id] = paket
+        elif data.startswith("approve_") or data.startswith("reject_"):
+            await query.message.reply_text("DEBUG OWNER BUTTON KE-TRIGGER")
 
-            save_group(g)
-
-            await query.message.edit_text("✅ APPROVED + PREMIUM AKTIF")
-
-        else:
-            await query.message.edit_text("❌ DITOLAK")
+    except Exception as e:
+        print("ERROR CALLBACK:", e)
 
 async def handle_group_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
     msg = update.message
@@ -898,9 +862,8 @@ async def handle_group_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
 #================= MAIN =================
 app = ApplicationBuilder().token(TOKEN).build()
 
-app.add_handler(CommandHandler("sewabot", sewabot))
 app.add_handler(CallbackQueryHandler(callback_handler))
-
+app.add_handler(CommandHandler("sewabot", sewabot))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_group_id))
 # COMMAND
 app.add_handler(CommandHandler("start", start))
