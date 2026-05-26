@@ -26,6 +26,10 @@ MONGO_URI = os.getenv("MONGO_URI")
 
 OWNER_ID = 6818257079
 OWNER_USERNAME = "@KINGZAAASLI"
+BOT_USERNAME = "reak_sabot"
+
+pending_sewa = {}
+pending_confirm = {}
 
 #================= DATABASE =================
 
