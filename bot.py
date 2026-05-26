@@ -805,7 +805,6 @@ async def callback_sewa(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if data in ["sewa_mingguan", "sewa_bulanan"]:
         paket = "mingguan" if "mingguan" in data else "bulanan"
-
         p = SEWA_PAKET[paket]
 
         pending_sewa[uid] = {
@@ -832,9 +831,6 @@ async def callback_sewa(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
 
-        # AUTO CANCEL 5 MENIT
-        asyncio.create_task(auto_cancel(uid, query))
-
 async def callback_confirm(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -842,7 +838,6 @@ async def callback_confirm(update: Update, context: ContextTypes.DEFAULT_TYPE):
     uid = query.from_user.id
     data = query.data
 
-    # USER SUDAH BAYAR
     if data == "sewa_paid":
 
         if uid not in pending_sewa:
@@ -872,9 +867,7 @@ async def callback_confirm(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
     elif data == "sewa_cancel":
-        if uid in pending_sewa:
-            del pending_sewa[uid]
-
+        pending_sewa.pop(uid, None)
         await query.edit_message_text("❌ TRANSAKSI DIBATALKAN")
 # ================= APPROVAL OWNER =================
 async def callback_owner(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -920,8 +913,8 @@ async def callback_owner(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 app = ApplicationBuilder().token(TOKEN).build()
 
-app.add_handler(CallbackQueryHandler(callback_sewa, pattern="^sewa_"))
-app.add_handler(CallbackQueryHandler(callback_confirm, pattern="^sewa_"))
+app.add_handler(CallbackQueryHandler(callback_sewa, pattern="^sewa_(mingguan|bulanan)$"))
+app.add_handler(CallbackQueryHandler(callback_confirm, pattern="^sewa_(paid|cancel)$"))
 app.add_handler(CallbackQueryHandler(callback_owner, pattern="^(approve_|reject_)"))
 # COMMAND
 app.add_handler(CommandHandler("start", start))
