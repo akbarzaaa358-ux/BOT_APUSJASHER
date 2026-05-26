@@ -27,20 +27,6 @@ MONGO_URI = os.getenv("MONGO_URI")
 OWNER_ID = 6818257079
 OWNER_USERNAME = "@KINGZAAASLI"
 
-pending_sewa = {}  # user_id -> data transaksi
-
-SEWA_PAKET = {
-    "mingguan": {
-        "days": 7,
-        "price": 5000
-    },
-    "bulanan": {
-        "days": 30,
-        "price": 15000
-    }
-}
-
-
 #================= DATABASE =================
 
 client = MongoClient(MONGO_URI)
@@ -796,102 +782,10 @@ async def rekapkata(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await msg.reply_text(hasil)
 
-async def callback_router(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
 
-    uid = query.from_user.id
-    data = query.data
-
-    # ================= SEWA MENU =================
-    if data in ["sewa_mingguan", "sewa_bulanan"]:
-        paket = "mingguan" if data == "sewa_mingguan" else "bulanan"
-
-        p = SEWA_PAKET[paket]
-
-        pending_sewa[uid] = {
-            "uid": uid,
-            "chat_id": str(query.message.chat.id),
-            "paket": paket.upper(),
-            "days": p["days"],
-            "price": p["price"],
-            "status": "pending",
-            "created_at": time.time()
-        }
-
-        keyboard = [
-            [InlineKeyboardButton("✅ SUDAH TRANSFER", callback_data="sewa_paid")],
-            [InlineKeyboardButton("❌ CANCEL", callback_data="sewa_cancel")]
-        ]
-
-        await query.edit_message_text(
-            f"💳 PAYMENT SEWA\n\n"
-            f"📦 Paket: {paket.upper()}\n"
-            f"💰 Harga: Rp{p['price']}\n"
-            f"⏳ Exp: {p['days']} hari\n\n"
-            f"⚠️ Klik setelah transfer",
-            reply_markup=InlineKeyboardMarkup(keyboard)
-        )
-        return
-
-    # ================= CONFIRM =================
-    if data == "sewa_paid":
-        if uid not in pending_sewa:
-            await query.edit_message_text("❌ DATA TIDAK DITEMUKAN")
-            return
-
-        trx = pending_sewa[uid]
-        trx["status"] = "waiting_approval"
-
-        keyboard = [
-            [InlineKeyboardButton("APPROVE", callback_data=f"approve_{uid}")],
-            [InlineKeyboardButton("REJECT", callback_data=f"reject_{uid}")]
-        ]
-
-        await query.edit_message_text("⏳ MENUNGGU APPROVAL OWNER", reply_markup=InlineKeyboardMarkup(keyboard))
-
-        await context.bot.send_message(
-            OWNER_ID,
-            f"💰 SEWA BARU\nUser: {uid}\nPaket: {trx['paket']}\nHarga: Rp{trx['price']}\nChat: {trx['chat_id']}",
-            reply_markup=InlineKeyboardMarkup(keyboard)
-        )
-        return
-
-    if data == "sewa_cancel":
-        pending_sewa.pop(uid, None)
-        await query.edit_message_text("❌ TRANSAKSI DIBATALKAN")
-        return
-
-    # ================= OWNER APPROVAL =================
-    if query.from_user.id == OWNER_ID:
-        if data.startswith("approve_"):
-            uid2 = int(data.split("_")[1])
-
-            trx = pending_sewa.get(uid2)
-            if not trx:
-                return await query.edit_message_text("DATA TIDAK DITEMUKAN")
-
-            g = get_group(trx["chat_id"])
-            g["premium_users"][str(uid2)] = {
-                "name": "SEWA USER",
-                "expire": time.time() + (trx["days"] * 86400)
-            }
-            save_group(g)
-
-            pending_sewa.pop(uid2, None)
-            await query.edit_message_text("APPROVE BERHASIL")
-            return
-
-        if data.startswith("reject_"):
-            uid2 = int(data.split("_")[1])
-            pending_sewa.pop(uid2, None)
-            await query.edit_message_text("DITOLAK")
-            return
 #================= MAIN =================
-
 app = ApplicationBuilder().token(TOKEN).build()
 
-app.add_handler(CallbackQueryHandler(callback_router))
 # COMMAND
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("sewabot", sewabot))
