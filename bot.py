@@ -5,8 +5,7 @@ import asyncio
 import logging
 from datetime import datetime, timedelta, timezone
 
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import CallbackQueryHandler, CommandHandler, MessageHandler, ContextTypes, filters
+from telegram import Update
 from telegram.ext import (
     ApplicationBuilder,
     CommandHandler,
@@ -32,7 +31,6 @@ OWNER_USERNAME = "@KINGZAAASLI"
 client = MongoClient(MONGO_URI)
 db = client["telegram_bot"]
 groups_col = db["groups"]
-pending_confirm = {}
 chat_logs = db["chat_logs"]
 #================= RESPONSE =================
 
@@ -213,22 +211,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
     await msg.reply_text(text)
-
-async def sewabot(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    msg = update.message
-
-    if msg.chat.type != "private":
-        return await msg.reply_text("💎 SILAHKAN CHAT @KESUKBOT")
-
-    keyboard = [
-        [InlineKeyboardButton("📆 Mingguan", callback_data="sewa_mingguan")],
-        [InlineKeyboardButton("📅 Bulanan", callback_data="sewa_bulanan")]
-    ]
-
-    await msg.reply_text(
-        "💎 PILIH PAKET SEWA:",
-        reply_markup=InlineKeyboardMarkup(keyboard)
-    )
 #================= INFOBOT =================
 
 async def infobot(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -798,73 +780,9 @@ async def rekapkata(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await msg.reply_text(hasil)
 
-async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        query = update.callback_query
-        await query.answer()
-
-        data = query.data
-        uid = str(query.from_user.id)
-
-        print("DEBUG CALLBACK:", data)  # 🔥 cek jalan atau tidak
-
-        if data in ["sewa_mingguan", "sewa_bulanan"]:
-            pending_confirm[uid] = {"paket": data}
-
-            keyboard = [[InlineKeyboardButton("SUDAH BAYAR", callback_data="sudah_bayar")]]
-
-            await query.message.reply_text(
-                "💳 PAYMENT KIRIM:",
-                reply_markup=InlineKeyboardMarkup(keyboard)
-            )
-
-        elif data == "sudah_bayar":
-            await query.message.reply_text("📩 KIRIM ID GRUP")
-
-        elif data.startswith("approve_") or data.startswith("reject_"):
-            await query.message.reply_text("DEBUG OWNER BUTTON KE-TRIGGER")
-
-    except Exception as e:
-        print("ERROR CALLBACK:", e)
-
-async def handle_group_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    msg = update.message
-    uid = str(msg.from_user.id)
-
-    if uid not in pending_confirm:
-        return
-
-    gid = msg.text.strip()
-    paket = pending_confirm[uid]["paket"]
-
-    keyboard = [
-        [
-            InlineKeyboardButton(
-                "TERIMA",
-                callback_data=f"approve_{uid}_{gid}_{paket}"
-            ),
-            InlineKeyboardButton(
-                "TOLAK",
-                callback_data=f"reject_{uid}_{gid}_{paket}"
-            )
-        ]
-    ]
-
-    await context.bot.send_message(
-        chat_id=OWNER_ID,
-        text=f"💰 REQUEST SEWA\nUSER: {uid}\nGRUP: {gid}\nPAKET: {paket}",
-        reply_markup=InlineKeyboardMarkup(keyboard)
-    )
-
-    await msg.reply_text("⏳ MENUNGGU APPROVAL OWNER...")
-
-    del pending_confirm[uid]
 #================= MAIN =================
 app = ApplicationBuilder().token(TOKEN).build()
 
-app.add_handler(CallbackQueryHandler(callback_handler))
-app.add_handler(CommandHandler("sewabot", sewabot))
-app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_group_id))
 # COMMAND
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("help", help_cmd))
